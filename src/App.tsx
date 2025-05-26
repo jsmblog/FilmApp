@@ -32,16 +32,20 @@ import '@ionic/react/css/palettes/dark.system.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import Menu from './components/Menu';
+import Category from './components/Category';
+import MediaDetails from './components/MediaDetails';
 
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
+    <Menu />
     <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/home">
-          <Home />
-        </Route>
+      <IonRouterOutlet id="main-content">
+        <Route exact path="/home" component={Home} />
+        <Route exact path="/category/:id/:name" component={Category} />
+        <Route exact path="/:mediaType(movie|tv)/:id" component={MediaDetails} />
         <Route exact path="/">
           <Redirect to="/home" />
         </Route>
