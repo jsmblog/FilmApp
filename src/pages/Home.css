@@ -2,7 +2,12 @@
 .movie-container {
   position: relative;
 }
-
+.ion-icon {
+  position: absolute;
+  right: 2.8rem;
+  top: .8rem;
+  font-size: 19px;
+}
 .title-movie {
     margin-left: .5rem;
     color: var(--co-txt-dark);

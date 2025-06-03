@@ -19,7 +19,7 @@ const Card: React.FC<{ dataMovie: any[] }> = ({ dataMovie = [] }) => {
   };
 
   const swiperParams = {
-    slidesPerView: 'auto',
+    slidesPerView: 'auto' as const,
     spaceBetween: 10,
     freeMode: true,
     scrollbar: {
@@ -29,8 +29,8 @@ const Card: React.FC<{ dataMovie: any[] }> = ({ dataMovie = [] }) => {
     modules: [FreeMode, Scrollbar],
     breakpoints: {
       640: { spaceBetween: 15 },
-      768: { slidesPerView: 'auto', spaceBetween: 20 },
-      1024: { slidesPerView: 'auto', spaceBetween: 25 }
+      768: { slidesPerView: 'auto' as const, spaceBetween: 20 },
+      1024: { slidesPerView: 'auto' as const, spaceBetween: 25 }
     }
   };
 
@@ -77,7 +77,7 @@ const Card: React.FC<{ dataMovie: any[] }> = ({ dataMovie = [] }) => {
 
                 <IonCardTitle className="movie-title">{title || name}</IonCardTitle>
                 <IonCardSubtitle className="movie-language">
-                  Idioma: {language[original_language] || 'Desconocido'}
+                  Idioma: {language[original_language as keyof typeof language] || 'Desconocido'}
                 </IonCardSubtitle>
                 <IonCardSubtitle className="movie-date">
                   {release_date}

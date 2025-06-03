@@ -18,7 +18,6 @@ const AllMovies: React.FC<AllMoviesProps> = ({ movieToSearch, mediaType }) => {
   const [dataMovie, setDataMovie] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  console.log(dataMovie)
   const fetchData = useCallback(async (page = 1, searchQuery = "") => {
     try {
       const endpoint = searchQuery
