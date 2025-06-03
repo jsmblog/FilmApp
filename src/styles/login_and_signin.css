@@ -1,110 +1,283 @@
-/* login_and_signin.css */
-
-/* ----------------------------------------------------
-   1. Contenedor general del formulario
-   ---------------------------------------------------- */
-.form-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: var(--ion-color-light);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.auth-page {
+  --background: var(--co-background);
+  min-height: 100vh;
 }
 
-/* ----------------------------------------------------
-   2. Estilo de cada etiqueta (label)
-   ---------------------------------------------------- */
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--ion-text-color);
-  font-size: 1rem;
+.auth-background {
+  background: var(--co-background);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
 }
 
-/* ----------------------------------------------------
-   3. Estilo para los inputs (texto, email y contraseña)
-   ---------------------------------------------------- */
-.form-input {
+.auth-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(74, 171, 247, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(63, 81, 181, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 40% 80%, rgba(146, 162, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.auth-container {
+  background: var(--co-white);
+  backdrop-filter: blur(1%);
+  border-radius: 25px;
+  padding:2rem;
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid var(--ion-color-medium);
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  max-width: 440px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
-/* Estado focus de los inputs */
-.form-input:focus {
-  outline: none;
-  border-color: var(--ion-color-primary);
-  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
-}
+/* ============================================
+   Header Section
+   ============================================ */
 
-/* ----------------------------------------------------
-   4. Botón principal del formulario
-   ---------------------------------------------------- */
-.form-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: var(--ion-color-primary);
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-}
-
-/* Hover y active (presionado) del botón */
-.form-button:hover {
-  background-color: var(--ion-color-primary-shade);
-}
-.form-button:active {
-  transform: scale(0.98);
-}
-
-/* ----------------------------------------------------
-   5. Estilo para el IonButton que funciona como enlace
-   ---------------------------------------------------- */
-.link-button {
-  --background: transparent;
-  --color: var(--ion-color-primary);
-  margin: 1rem auto 0;
-  padding: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: block;
+.auth-header {
   text-align: center;
-  text-decoration: underline;
+  margin-bottom: 2.5rem;
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--co-blue-1);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.auth-subtitle {
+  font-size: 1rem;
+  color: var(--co-gray);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ============================================
+   Form Styling
+   ============================================ */
+
+.auth-form {
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  z-index: 2;
+  color: var(--co-gray);
+  font-size: 1.25rem;
+  transition: color 0.3s ease;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  font-size: 1rem;
+  background: var(--co-back-gray-4);
+  color: var(--co-blue-1);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.auth-input::placeholder {
+  color: var(--co-gray);
+  font-weight: 400;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--co-blue-4);
+  background: var(--co-white);
+  box-shadow: 0 0 0 4px rgba(74, 171, 247, 0.1);
+}
+
+.auth-input:focus + .input-icon,
+.input-wrapper:focus-within .input-icon {
+  color: var(--co-blue-4);
+}
+
+/* Password Toggle Button */
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--co-gray);
   cursor: pointer;
-  width: auto;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Al pasar el ratón por el enlace */
-.link-button:hover {
-  --color: var(--ion-color-primary-tint);
+.password-toggle:hover {
+  background: rgba(74, 171, 247, 0.1);
+  color: var(--co-blue-4);
 }
 
-/* ----------------------------------------------------
-   6. Responsive: en pantallas pequeñas, reducir márgenes
-   ---------------------------------------------------- */
-@media (max-width: 480px) {
-  .form-container {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
+/* ============================================
+   Buttons
+   ============================================ */
 
-  .form-input {
-    padding: 0.6rem;
-    font-size: 0.95rem;
-  }
+.auth-button {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  text-transform: none;
+  letter-spacing: 0.025em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 10px;
+}
 
-  .form-button {
-    padding: 0.6rem;
-    font-size: 0.95rem;
+.auth-button.primary {
+  background: linear-gradient(135deg, var(--co-blue-4) 0%, var(--co-blue-2) 100%);
+  color: var(--co-white);
+  box-shadow: 0 8px 25px -8px rgba(74, 171, 247, 0.4);
+}
+
+.auth-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px -8px rgba(74, 171, 247, 0.5);
+}
+
+.auth-button.primary:active {
+  transform: translateY(0);
+}
+
+.auth-button.secondary {
+  background: transparent;
+  color: var(--co-blue-2);
+  border: 2px solid var(--co-back-gray-3);
+  --background: transparent;
+  --background-hover: rgba(63, 81, 181, 0.05);
+  --color: var(--co-blue-2);
+  --color-hover: var(--co-blue-1);
+  margin: 0;
+}
+
+.auth-button.secondary:hover {
+  border-color: var(--co-blue-4);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   Divider
+   ============================================ */
+
+.auth-divider {
+  text-align: center;
+  margin: 2rem 0 1.5rem 0;
+  position: relative;
+}
+
+.auth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--co-back-gray-3);
+}
+
+.auth-divider span {
+  background: var(--co-white);
+  padding: .2rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 0 20px 1px var(--co-white);
+  color: var(--co-gray);
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   Loading States
+   ============================================ */
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 520px) {
+  .auth-background {
+    padding: 1rem;
+  }
+  
+  .auth-container {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .auth-title {
+    font-size: 1.75rem;
+  }
+  
+  .auth-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .auth-input {
+    padding: 0.875rem 0.875rem 0.875rem 2.75rem;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .input-icon {
+    left: 0.875rem;
+    font-size: 1.125rem;
+  }
+  
+  .password-toggle {
+    right: 0.875rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .auth-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .auth-title {
+    font-size: 1.5rem;
   }
 }
