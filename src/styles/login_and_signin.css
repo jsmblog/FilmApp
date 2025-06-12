@@ -25,7 +25,15 @@
               radial-gradient(circle at 40% 80%, rgba(146, 162, 255, 0.1) 0%, transparent 50%);
   pointer-events: none;
 }
-
+.label-photo {
+  border: 1px solid var(--co-back-gray-3);
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+}
 .auth-container {
   background: var(--co-white);
   backdrop-filter: blur(1%);
@@ -80,6 +88,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .input-icon {

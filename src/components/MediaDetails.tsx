@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton,
   IonTitle, IonContent, IonGrid, IonRow, IonCol,
-  IonCard, IonCardContent, IonBadge, IonList, IonItem, IonLabel
+  IonCard, IonCardContent, IonBadge, IonList, IonItem, IonLabel,
+  IonButton,
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 import { connection } from '../connection/connection';
 import { sliceText } from '../js/sliceText';
 import '../styles/movieDetails.css';
-
+import { connectionToBackend } from '../connection/connectionToBackend';
+import { useToast } from '../hooks/UseToast';
+import BoxComments from '../utils/BoxComments';
 type MediaType = 'movie' | 'tv';
 
 interface Params {
@@ -50,7 +53,65 @@ interface MediaDetailsData {
 const MediaDetails: React.FC = () => {
   const { mediaType, id } = useParams<Params>();
   const [data, setData] = useState<MediaDetailsData | null>(null);
+  const [isOnBoxComments, setIsOnBoxComments] = useState(false);
+  const [allComments, setAllComments] = useState<any[]>([]);
+  const { showToast, ToastComponent } = useToast();
   const [error, setError] = useState(false);
+  console.log(allComments)
+  const [comment, setComment] = useState('');
+  const closeBoxComments = () => setIsOnBoxComments(!isOnBoxComments)
+  const commentsRef = useRef(null);
+  const fetchComments = async () => {
+    try {
+      const id_movie = id;
+      const { data } = await connectionToBackend.get(`/comments/movie/${id_movie}`);
+      setAllComments(data)
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+ const createComment = async () => {
+  if (!comment) {
+    return showToast("Escriba algo antes de enviar 😉");
+  }
+  try {
+    const stored = sessionStorage.getItem('user');
+    const user = stored ? JSON.parse(stored) : null;
+    const id_user = user?.id || '';
+    const newComment = { comment, id_user, id_movie: id };
+    await connectionToBackend.post(`/create/comment`, newComment);
+
+    showToast("Comentario enviado con éxito", 2000);
+
+    fetchComments();
+  } catch (error) {
+    console.error(error);
+    if(error?.status === 400) {
+     return showToast("No puedes volver a comentar")
+    }
+    showToast("Error al enviar comentario", 3000);
+  } finally {
+    setComment('');
+  }
+};
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      commentsRef.current &&
+      event.target instanceof Node &&
+      !(commentsRef.current as unknown as HTMLElement).contains(event.target)
+    ) {
+      setIsOnBoxComments(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -66,6 +127,11 @@ const MediaDetails: React.FC = () => {
     };
     fetchDetails();
   }, [mediaType, id]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [id])
+
 
   if (error) {
     return (
@@ -101,6 +167,7 @@ const MediaDetails: React.FC = () => {
 
   return (
     <IonPage>
+      {ToastComponent}
       <IonHeader translucent>
         <IonToolbar className="ion-toolbar-menu">
           <IonButtons slot="start">
@@ -138,7 +205,12 @@ const MediaDetails: React.FC = () => {
                 <h2>Sinopsis</h2>
                 <p>{sliceText(data.overview, 1000)}</p>
               </section>
-
+              <IonButton onClick={closeBoxComments} className='btn-comment'>
+                Comentar ( {allComments.length} )
+              </IonButton>
+              {
+                isOnBoxComments && <BoxComments allComments={allComments} closeBoxComments={closeBoxComments} createComment={createComment} comment={comment} setComment={setComment} fetchComments={fetchComments} />
+              }
               {/* Géneros */}
               <section className="section">
                 <h2>Géneros</h2>
@@ -160,9 +232,9 @@ const MediaDetails: React.FC = () => {
                 <section className="section">
                   <h2>Presupuesto & Recaudación</h2>
                   <p>
-                    <strong>Presupuesto:</strong> ${data.budget!.toLocaleString()}<br/>
-                    <strong>Recaudación:</strong> <span className={data.revenue! > data.budget! ? 'gain' : 'lost'}>${data.revenue!.toLocaleString()}</span><br/>
-                    <strong>{data.revenue! > data.budget! ? 'Ganancias:' : 'Pérdidas:'}</strong> 
+                    <strong>Presupuesto:</strong> ${data.budget!.toLocaleString()}<br />
+                    <strong>Recaudación:</strong> <span className={data.revenue! > data.budget! ? 'gain' : 'lost'}>${data.revenue!.toLocaleString()}</span><br />
+                    <strong>{data.revenue! > data.budget! ? 'Ganancias:' : 'Pérdidas:'}</strong>
                     <span className={data.revenue! > data.budget! ? 'gain' : 'lost'}>
                       ${Math.abs(data.revenue! - data.budget!).toLocaleString()}
                     </span> {data.revenue! > data.budget! ? '⬆️' : '⬇️'}
@@ -217,7 +289,7 @@ const MediaDetails: React.FC = () => {
                   <h2>Vídeos</h2>
                   {data.videos.results
                     .filter(v => v.site === 'YouTube' && /trailer/i.test(v.type))
-                    .slice(0,3)
+                    .slice(0, 3)
                     .map(v => (
                       <iframe
                         key={v.id}

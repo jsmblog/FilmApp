@@ -31,3 +31,8 @@
   --co-red-2:rgb(255, 16, 16);
   --co-background:linear-gradient(to bottom, #072230, #000204);
 }
+
+* button {
+  padding: .5rem .75rem;
+  border-radius: 8px;
+}
