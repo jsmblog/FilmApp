@@ -85,9 +85,9 @@ const MediaDetails: React.FC = () => {
     showToast("Comentario enviado con éxito", 2000);
 
     fetchComments();
-  } catch (error) {
+  } catch (error:any) {
     console.error(error);
-    if(error?.status === 400) {
+    if ((error as any)?.response?.status === 400) {
      return showToast("No puedes volver a comentar")
     }
     showToast("Error al enviar comentario", 3000);

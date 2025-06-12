@@ -73,7 +73,7 @@ const BoxComments: React.FC<BoxCommentsProps> = ({
   return (
     <div className="box-comments">
       {ToastComponent}
-      <IonCard className="ion-card-comments">
+      <IonCard className="ion-card-comments fade-in-bottom">
         <button className="btn-close-box-comments" onClick={closeBoxComments}>✕</button>
         <h2 className="total-comments">
           {allComments.length}
