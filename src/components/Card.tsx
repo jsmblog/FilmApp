@@ -7,7 +7,7 @@ import 'swiper/css/scrollbar';
 import { FreeMode, Scrollbar } from 'swiper/modules';
 import { sliceText } from '../js/sliceText';
 
-const Card: React.FC<{ dataMovie: any[] }> = ({ dataMovie = [] }) => {
+const Card: React.FC<{ dataMovie: any[]; movieToSearch?: any }> = ({ dataMovie = [], movieToSearch }) => {
   const language = {
     'en': 'Inglés',
     'es': 'Español',
@@ -36,7 +36,7 @@ const Card: React.FC<{ dataMovie: any[] }> = ({ dataMovie = [] }) => {
 
   return (
     <div className='movie-container'>
-      <h3 className='title-movie'>Películas en tendencia</h3>
+    <h3 className='title-movie'>{movieToSearch.startsWith('actor :') ? ` ${movieToSearch}` :  'Películas en tendencia'}</h3>
       <Swiper
         {...swiperParams}
         className="custom-swiper"

@@ -6,13 +6,13 @@ import {
   IonButtons,
   IonMenuButton,
   IonContent,
-  useIonRouter,
   IonIcon,
+  IonAlert,
+  useIonRouter,
 } from '@ionic/react';
 import './Home.css';
 import { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import SearchBar from '../components/SearchBar';
 import { connection } from '../connection/connection';
 import AllMovies from '../components/AllMovies';
 import Tabs from '../components/Tabs';
@@ -20,12 +20,20 @@ import { powerOutline } from 'ionicons/icons';
 
 type TabType = 'películas' | 'series' | 'tv';
 
+type AlertInputs = {
+  titleInput?: string;
+  actorInput?: string;
+};
+
 const Home: React.FC = () => {
   const [dataMovie, setDataMovie] = useState<any[]>([]);
   const [movieToSearch, setMovieToSearch] = useState('');
-  const [isOnSearch, setIsOnSearch] = useState(false);
   const [tabs, setTabs] = useState<TabType>('películas');
+  const [showSearchAlert, setShowSearchAlert] = useState(false);
   const navigate = useIonRouter();
+
+  // Open alert with two inputs
+  const openSearchAlert = () => setShowSearchAlert(true);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('user');
@@ -37,19 +45,35 @@ const Home: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const mediaType =
-          tabs === 'películas'
-            ? 'all'
-            : tabs === 'series'
-            ? 'movie'
-            : 'tv';
+        const mediaType = tabs === 'películas' ? 'movie' : 'tv';
 
-        const endpoint = movieToSearch
-          ? `/search/${mediaType}?query=${encodeURIComponent(movieToSearch)}`
-          : `/trending/${mediaType}/day`;
-
-        const { data } = await connection.get(endpoint);
-        setDataMovie(data.results);
+        if (movieToSearch) {
+          if (movieToSearch.startsWith('actor :')) {
+            const actorName = movieToSearch.replace('actor :', '');
+            const { data: personData } = await connection.get(
+              `/search/person?query=${encodeURIComponent(actorName)}`
+            );
+            const actorIds = personData.results.map((p: any) => p.id).join(',');
+            if (actorIds) {
+              const { data: castData } = await connection.get(
+                `/discover/${mediaType}?with_cast=${actorIds}`
+              );
+              setDataMovie(castData.results);
+            } else {
+              setDataMovie([]);
+            }
+          } else {
+            // title search
+            const { data } = await connection.get(
+              `/search/${mediaType}?query=${encodeURIComponent(movieToSearch)}`
+            );
+            setDataMovie(data.results);
+          }
+        } else {
+          const endpoint = `/trending/${mediaType}/day`;
+          const { data } = await connection.get(endpoint);
+          setDataMovie(data.results);
+        }
       } catch (error) {
         console.error(error);
       }
@@ -71,71 +95,68 @@ const Home: React.FC = () => {
             <IonMenuButton />
           </IonButtons>
           <IonTitle className="title-app">FilmApp</IonTitle>
-          <IonIcon
-            className="ion-icon"
-            onClick={logOut}
-            icon={powerOutline}
+          <IonIcon className="ion-icon" onClick={logOut} icon={powerOutline} />
+
+          {/* Search Alert Button */}
+          <button onClick={openSearchAlert} className="search-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="search"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+              />
+            </svg>
+          </button>
+
+          <IonAlert
+            isOpen={showSearchAlert}
+            onDidDismiss={() => setShowSearchAlert(false)}
+            header="Buscar película"
+            inputs={[
+              {
+                name: 'titleInput',
+                type: 'text',
+                placeholder: 'Título de película',
+              },
+              {
+                name: 'actorInput',
+                type: 'text',
+                placeholder: 'Nombre de actor',
+              },
+            ]}
+            buttons={[
+              { text: 'Cancelar', role: 'cancel' },
+              {
+                text: 'Buscar',
+                handler: (inputs: AlertInputs) => {
+                  // Determine mode based on input
+                  if (inputs.actorInput && !inputs.titleInput) {
+                    setMovieToSearch(`actor :${inputs.actorInput}`);
+                  } else if (inputs.titleInput && !inputs.actorInput) {
+                    setMovieToSearch(inputs.titleInput);
+                  } else {
+                    setMovieToSearch('');
+                  }
+                },
+              },
+            ]}
           />
-          {!isOnSearch ? (
-            <button
-              onClick={() => setIsOnSearch(true)}
-              className="search-button"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="search"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                />
-              </svg>
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsOnSearch(false)}
-              className="search-button"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="search"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18 18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
         </IonToolbar>
 
-        {!isOnSearch ? (
-          <Tabs tabs={tabs} setTabs={setTabs} />
-        ) : (
-          <SearchBar
-            movieToSearch={movieToSearch}
-            setMovieToSearch={setMovieToSearch}
-          />
-        )}
+        {/* Tabs always shown */}
+        <Tabs tabs={tabs} setTabs={setTabs} />
       </IonHeader>
 
       <IonContent className="custom-content" fullscreen>
-        {tabs === 'películas' && <Card dataMovie={dataMovie} />}
-
-        <AllMovies
-          mediaType={tabs === 'películas' ? 'movie' : 'tv'}
-          movieToSearch={movieToSearch}
-        />
+        {tabs === 'películas' && <Card dataMovie={dataMovie} movieToSearch={movieToSearch} />}
+        <AllMovies mediaType={tabs === 'películas' ? 'movie' : 'tv'} movieToSearch={movieToSearch} />
       </IonContent>
     </IonPage>
   );

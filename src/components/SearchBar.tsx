@@ -13,7 +13,7 @@ const SearchBar: React.FC<SearchBarProps> = ({movieToSearch,setMovieToSearch}) =
             value={movieToSearch}
             onIonClear={() => setMovieToSearch('')}
             onIonChange={(e) => setMovieToSearch(e.detail.value!)}
-            placeholder="Busque una película..."
+            placeholder="Busque una película por nombre o actor..."
             className='ion-searchbar'
           ></IonSearchbar>
     </IonToolbar>
