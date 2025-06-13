@@ -4,6 +4,7 @@ import {
   IonTitle, IonContent, IonGrid, IonRow, IonCol,
   IonCard, IonCardContent, IonBadge, IonList, IonItem, IonLabel,
   IonButton,
+  IonIcon,
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 import { connection } from '../connection/connection';
@@ -12,11 +13,18 @@ import '../styles/movieDetails.css';
 import { connectionToBackend } from '../connection/connectionToBackend';
 import { useToast } from '../hooks/UseToast';
 import BoxComments from '../utils/BoxComments';
+import { heart, heartOutline } from 'ionicons/icons';
 type MediaType = 'movie' | 'tv';
 
 interface Params {
   mediaType: MediaType;
   id: string;
+}
+interface FavoriteItem {
+  id: number;
+  title: string;
+  mediaType: MediaType;
+  posterPath: string | null;
 }
 
 interface BaseCredits {
@@ -55,9 +63,7 @@ const MediaDetails: React.FC = () => {
   const [data, setData] = useState<MediaDetailsData | null>(null);
   const [isOnBoxComments, setIsOnBoxComments] = useState(false);
   const [allComments, setAllComments] = useState<any[]>([]);
-  const { showToast, ToastComponent } = useToast();
   const [error, setError] = useState(false);
-  console.log(allComments)
   const [comment, setComment] = useState('');
   const closeBoxComments = () => setIsOnBoxComments(!isOnBoxComments)
   const commentsRef = useRef(null);
@@ -132,7 +138,42 @@ const MediaDetails: React.FC = () => {
     fetchComments();
   }, [id])
 
+const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const { showToast, ToastComponent } = useToast();
 
+  // Load favorites from sessionStorage
+  useEffect(() => {
+    const stored = sessionStorage.getItem('favorites');
+    const favList: FavoriteItem[] = stored ? JSON.parse(stored) : [];
+    setFavorites(favList);
+  }, []);
+
+  // Check if this item is already favorite
+  useEffect(() => {
+    const exists = favorites.some(f => f.id === Number(id) && f.mediaType === mediaType);
+    setIsFavorite(exists);
+  }, [favorites, id, mediaType]);
+
+  const toggleFavorite = () => {
+    if (!data) return; 
+    const item: FavoriteItem = {
+      id: Number(id),
+      title: mediaType === 'movie' ? (data.title ?? '') : (data.name ?? ''),
+      mediaType,
+      posterPath: data.backdrop_path || null
+    };
+    let updated: FavoriteItem[];
+    if (isFavorite) {
+      updated = favorites.filter(f => !(f.id === item.id && f.mediaType === mediaType));
+      showToast('Eliminado de favoritos', 2000);
+    } else {
+      updated = [...favorites, item];
+      showToast('Añadido a favoritos', 2000);
+    }
+    sessionStorage.setItem('favorites', JSON.stringify(updated));
+    setFavorites(updated);
+  };
   if (error) {
     return (
       <IonPage>
@@ -174,6 +215,11 @@ const MediaDetails: React.FC = () => {
             <IonBackButton text="" defaultHref="/home" />
           </IonButtons>
           <IonTitle>{sliceText(title, 25)}</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={toggleFavorite} fill="clear">
+              <IonIcon icon={isFavorite ? heart : heartOutline} />
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 

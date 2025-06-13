@@ -11,7 +11,6 @@ export const connection = axios.create({
         'api_key': VITE_API_KEY,
         'include_adult': true,
         'language': 'en-US',
-        // 'page': 1,
     },
 });
 

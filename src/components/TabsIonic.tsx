@@ -1,54 +1,33 @@
 import React from 'react';
-import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
+import { IonTabBar, IonTabButton, IonLabel } from '@ionic/react';
+import '../styles/tabs.css';
 
-import { Route, Redirect } from 'react-router';
+export type TabType = 'películas' | 'series' | 'tv';
 
-import { playCircle, radio, library, search } from 'ionicons/icons';
-
-import HomePage from '../pages/Home';
-
-
-function TabsIonic() {
-  return (
-    <IonReactRouter>
-      <IonTabs>
-        <IonRouterOutlet>
-          <Redirect exact path="/" to="/home" />
-          {/*
-          Use the render method to reduce the number of renders your component will have due to a route change.
-
-          Use the component prop when your component depends on the RouterComponentProps passed in automatically.
-        */}
-          <Route path="/home" render={() => <HomePage />} exact={true} />
-          {/* <Route path="/radio" render={() => <RadioPage />} exact={true} />
-          <Route path="/library" render={() => <LibraryPage />} exact={true} />
-          <Route path="/search" render={() => <SearchPage />} exact={true} /> */}
-        </IonRouterOutlet>
-
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="home" href="/home">
-            <IonIcon icon={playCircle} />
-            <IonLabel>Listen now</IonLabel>
-          </IonTabButton>
-
-          <IonTabButton tab="radio" href="/radio">
-            <IonIcon icon={radio} />
-            <IonLabel>Radio</IonLabel>
-          </IonTabButton>
-
-          <IonTabButton tab="library" href="/library">
-            <IonIcon icon={library} />
-            <IonLabel>Library</IonLabel>
-          </IonTabButton>
-
-          <IonTabButton tab="search" href="/search">
-            <IonIcon icon={search} />
-            <IonLabel>Search</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
-    </IonReactRouter>
-  );
+interface TabsIonicProps {
+  tabs: TabType;
+  setTabs: (tab: TabType) => void;
 }
+
+const tabItems: { key: TabType; label: string }[] = [
+  { key: 'películas', label: 'Películas' },
+  { key: 'series', label: 'Series' },
+  { key: 'tv', label: 'TV' },
+];
+
+const TabsIonic: React.FC<TabsIonicProps> = ({ tabs, setTabs }) => (
+  <IonTabBar slot="bottom" className="tabs">
+    {tabItems.map(({ key, label }) => (
+      <IonTabButton
+        key={key}
+        tab={key}
+        className={`tab${tabs === key ? ' active' : ''}`}
+        onClick={() => setTabs(key)}
+      >
+        <IonLabel>{label}</IonLabel>
+      </IonTabButton>
+    ))}
+  </IonTabBar>
+);
+
 export default TabsIonic;

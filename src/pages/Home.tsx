@@ -1,6 +1,7 @@
+import React, { useEffect, useState } from 'react';
 import {
-  IonHeader,
   IonPage,
+  IonHeader,
   IonToolbar,
   IonTitle,
   IonButtons,
@@ -8,83 +9,101 @@ import {
   IonContent,
   IonIcon,
   IonAlert,
+  IonModal,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonButton,
   useIonRouter,
 } from '@ionic/react';
-import './Home.css';
-import { useEffect, useState } from 'react';
+import { powerOutline, heartOutline, searchOutline } from 'ionicons/icons';
 import Card from '../components/Card';
-import { connection } from '../connection/connection';
 import AllMovies from '../components/AllMovies';
-import Tabs from '../components/Tabs';
-import { powerOutline } from 'ionicons/icons';
+import TabsIonic, { TabType } from '../components/TabsIonic';
+import { connection } from '../connection/connection';
+import './Home.css';
 
-type TabType = 'películas' | 'series' | 'tv';
-
-type AlertInputs = {
+interface AlertInputs {
   titleInput?: string;
   actorInput?: string;
-};
+}
+
+type FavoriteItem = { id: number; title: string; mediaType: string; posterPath: string | null };
 
 const Home: React.FC = () => {
   const [dataMovie, setDataMovie] = useState<any[]>([]);
   const [movieToSearch, setMovieToSearch] = useState('');
   const [tabs, setTabs] = useState<TabType>('películas');
   const [showSearchAlert, setShowSearchAlert] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const navigate = useIonRouter();
 
-  // Open alert with two inputs
-  const openSearchAlert = () => setShowSearchAlert(true);
-
+  // Load user & protect route
   useEffect(() => {
     const stored = sessionStorage.getItem('user');
     const user = stored ? JSON.parse(stored) : null;
-    if (!user?.token) {
-      navigate.push('/register', 'forward', 'push');
-      return;
-    }
+    if (!user?.token) navigate.push('/register', 'forward', 'push');
+  }, [navigate]);
 
+  // Fetch movies/trending/search
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const mediaType = tabs === 'películas' ? 'movie' : 'tv';
-
+        let results: any[] = [];
         if (movieToSearch) {
           if (movieToSearch.startsWith('actor :')) {
-            const actorName = movieToSearch.replace('actor :', '');
-            const { data: personData } = await connection.get(
-              `/search/person?query=${encodeURIComponent(actorName)}`
+            const actor = movieToSearch.replace('actor :', '');
+            const { data: pd } = await connection.get(
+              `/search/person?query=${encodeURIComponent(actor)}`
             );
-            const actorIds = personData.results.map((p: any) => p.id).join(',');
-            if (actorIds) {
-              const { data: castData } = await connection.get(
-                `/discover/${mediaType}?with_cast=${actorIds}`
+            const ids = pd.results.map((p: any) => p.id).join(',');
+            if (ids) {
+              const { data: cd } = await connection.get(
+                `/discover/${mediaType}?with_cast=${ids}`
               );
-              setDataMovie(castData.results);
-            } else {
-              setDataMovie([]);
+              results = cd.results;
             }
           } else {
-            // title search
             const { data } = await connection.get(
               `/search/${mediaType}?query=${encodeURIComponent(movieToSearch)}`
             );
-            setDataMovie(data.results);
+            results = data.results;
           }
         } else {
-          const endpoint = `/trending/${mediaType}/day`;
-          const { data } = await connection.get(endpoint);
-          setDataMovie(data.results);
+          const { data } = await connection.get(`/trending/${mediaType}/day`);
+          results = data.results;
         }
-      } catch (error) {
-        console.error(error);
+        setDataMovie(results);
+      } catch (e) {
+        console.error(e);
       }
     };
-
     fetchData();
-  }, [movieToSearch, tabs, navigate]);
+  }, [movieToSearch, tabs]);
 
+  // Search alert toggle
+  const openSearchAlert = () => setShowSearchAlert(true);
+
+  // Favorites modal toggle
+  const toggleFavorites = () => {
+    const stored = sessionStorage.getItem('favorites');
+    setFavorites(stored ? JSON.parse(stored) : []);
+    setShowFavorites(s => !s);
+  };
+
+  // Logout
   const logOut = () => {
     sessionStorage.removeItem('user');
     navigate.push('/login', 'forward', 'push');
+  };
+
+  // Handle search submission
+  const handleSearch = (inputs: AlertInputs) => {
+    if (inputs.actorInput && !inputs.titleInput) setMovieToSearch(`actor :${inputs.actorInput}`);
+    else if (inputs.titleInput && !inputs.actorInput) setMovieToSearch(inputs.titleInput);
+    else setMovieToSearch('');
   };
 
   return (
@@ -94,69 +113,74 @@ const Home: React.FC = () => {
           <IonButtons slot="start">
             <IonMenuButton />
           </IonButtons>
-          <IonTitle className="title-app">FilmApp</IonTitle>
-          <IonIcon className="ion-icon" onClick={logOut} icon={powerOutline} />
+          <IonTitle>FilmApp</IonTitle>
 
-          {/* Search Alert Button */}
-          <button onClick={openSearchAlert} className="search-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="search"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-              />
-            </svg>
-          </button>
+          <IonButtons slot="end">
+            <IonButton fill="clear" onClick={toggleFavorites}>
+              <IonIcon icon={heartOutline} />
+            </IonButton>
+            <IonButton fill="clear" onClick={logOut}>
+              <IonIcon icon={powerOutline} />
+            </IonButton>
+          </IonButtons>
+
+          <IonButtons slot="end">
+            <IonButton fill="clear" onClick={openSearchAlert}>
+              <IonIcon icon={searchOutline} />
+            </IonButton>
+          </IonButtons>
 
           <IonAlert
             isOpen={showSearchAlert}
             onDidDismiss={() => setShowSearchAlert(false)}
             header="Buscar película"
             inputs={[
-              {
-                name: 'titleInput',
-                type: 'text',
-                placeholder: 'Título de película',
-              },
-              {
-                name: 'actorInput',
-                type: 'text',
-                placeholder: 'Nombre de actor',
-              },
+              { name: 'titleInput', type: 'text', placeholder: 'Título de película' },
+              { name: 'actorInput', type: 'text', placeholder: 'Nombre de actor' }
             ]}
             buttons={[
               { text: 'Cancelar', role: 'cancel' },
-              {
-                text: 'Buscar',
-                handler: (inputs: AlertInputs) => {
-                  // Determine mode based on input
-                  if (inputs.actorInput && !inputs.titleInput) {
-                    setMovieToSearch(`actor :${inputs.actorInput}`);
-                  } else if (inputs.titleInput && !inputs.actorInput) {
-                    setMovieToSearch(inputs.titleInput);
-                  } else {
-                    setMovieToSearch('');
-                  }
-                },
-              },
+              { text: 'Buscar', handler: handleSearch }
             ]}
           />
         </IonToolbar>
-
-        {/* Tabs always shown */}
-        <Tabs tabs={tabs} setTabs={setTabs} />
       </IonHeader>
+        <TabsIonic tabs={tabs} setTabs={setTabs} />
 
-      <IonContent className="custom-content" fullscreen>
-        {tabs === 'películas' && <Card dataMovie={dataMovie} movieToSearch={movieToSearch} />}
-        <AllMovies mediaType={tabs === 'películas' ? 'movie' : 'tv'} movieToSearch={movieToSearch} />
+      <IonContent fullscreen className="custom-content">
+        {tabs === 'películas' && (
+          <>
+            <Card dataMovie={dataMovie} movieToSearch={movieToSearch} />
+            <AllMovies mediaType="movie" movieToSearch={movieToSearch} />
+          </>
+        )}
+        {(tabs === 'series' || tabs === 'tv') && (
+          <AllMovies mediaType="tv" movieToSearch={movieToSearch} />
+        )}
+
+        <IonModal isOpen={showFavorites} onDidDismiss={() => setShowFavorites(false)}>
+          <IonHeader>
+            <IonToolbar>
+              <IonTitle>Favoritos</IonTitle>
+              <IonButtons slot="end">
+                <IonButton onClick={() => setShowFavorites(false)}>Cerrar</IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent>
+            {favorites.length > 0 ? (
+              <IonList>
+                {favorites.map(f => (
+                  <IonItem key={`${f.mediaType}-${f.id}`} button routerLink={`/${f.mediaType}/${f.id}`}>
+                    <IonLabel>{f.title}</IonLabel>
+                  </IonItem>
+                ))}
+              </IonList>
+            ) : (
+              <p className="no-favorites">No tienes favoritos aún.</p>
+            )}
+          </IonContent>
+        </IonModal>
       </IonContent>
     </IonPage>
   );

@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { mail, lockClosed, eye, eyeOff } from 'ionicons/icons';
 import { connectionToBackend } from '../connection/connectionToBackend';
 import '../styles/login_and_signin.css';
+import { useToast } from '../hooks/UseToast';
 
 const Login: React.FC = () => {
   const [dataLogin, setDataLogin] = useState({
@@ -21,6 +22,7 @@ const Login: React.FC = () => {
   const [present, dismiss] = useIonLoading();
   const [presentAlert] = useIonAlert();
   const navigate = useIonRouter();
+  const { showToast, ToastComponent } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,6 +31,11 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (Object.values(dataLogin).some(value => value.trim() === '')) {
+      showToast('Por favor, completa todos los campos.');
+      return;
+    }
+    
     await present({
       message: 'Iniciando sesión...',
       spinner: 'circles'
@@ -52,6 +59,7 @@ const Login: React.FC = () => {
           buttons: ['OK'],
           mode:'ios'
         })
+        showToast(error?.response?.data?.message)
       console.log(error);
       await dismiss();
     }
@@ -59,6 +67,7 @@ const Login: React.FC = () => {
 
   return (
     <IonPage className="auth-page">
+    {ToastComponent}
       <div className="auth-background">
         <div className="auth-container">
           <div className="auth-header">

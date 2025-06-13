@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IonIcon, IonCard, IonImg, IonAvatar } from '@ionic/react';
 import { getTimeAgo } from '../js/getTimeAgo';
-import { ellipsisVertical, person, send, pencil } from 'ionicons/icons';
+import { ellipsisVertical, person, send, pencil, thumbsUp, thumbsDown } from 'ionicons/icons';
 import opinion from '/opinion.png';
 import { connectionToBackend } from '../connection/connectionToBackend';
 import { useToast } from '../hooks/UseToast';
@@ -24,6 +24,7 @@ const BoxComments: React.FC<BoxCommentsProps> = ({
   setComment,
   fetchComments
 }) => {
+  console.log(allComments)
   const [openOptionId, setOpenOptionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>('');
@@ -70,6 +71,19 @@ const BoxComments: React.FC<BoxCommentsProps> = ({
     }
   };
 
+  const handleLikeDislike = async (idComment: number, type: 'like' | 'dislike') => {
+    try {
+      const payload = { idComment, type };
+      const id = id_user;
+      await connectionToBackend.put(`/comments/like/${id}`, payload);
+      showToast(`Has ${type === 'like' ? 'dado like' : 'dado dislike'}`, 2000);
+      fetchComments();
+    } catch (error) {
+      console.error(error);
+      showToast('Error al registrar tu voto', 3000);
+    }
+  };
+
   return (
     <div className="box-comments">
       {ToastComponent}
@@ -81,33 +95,33 @@ const BoxComments: React.FC<BoxCommentsProps> = ({
         </h2>
         <section className="sect-comments">
           {allComments.length > 0 ? allComments.map(c => {
-            const { comments, createdAt, id, users } = c;
-            const photoSrc = `data:image/png;base64,${users.photoProfile}`;
+            const { comments, createdAt, id, users} = c;
+            const likes = JSON.parse(comments.likes)
+            const photoSrc = users.photoProfile
+              ? `data:image/png;base64,${users.photoProfile}`
+              : undefined;
             const isOpen = openOptionId === id.toString();
             const isEditing = editingId === id.toString();
+
+            const countLikes = likes?.filter((l: any) => l.type === 'like').length || 0;
+            const countDislikes = likes?.filter((l: any) => l.type === 'dislike').length || 0;
+            const userVote = likes?.find((l: any) => l.id === id_user);
 
             return (
               <div className="item-comment" key={id}>
                 <div className="header-comment">
-                  {users.photoProfile ? (
-                    <IonAvatar><IonImg className='photo-profile-bg' src={users.photoProfile ? photoSrc : person} /></IonAvatar>
-                  ) : (
-                    <IonAvatar><IonImg className='photo-profile-bg' src={person} /></IonAvatar>
-                  )}
+                  <IonAvatar>
+                    <IonImg className='photo-profile-bg' src={photoSrc || person} />
+                  </IonAvatar>
                   <h5 className="name-user">{users.user}</h5>
-                  <span className="time-ago">{!comments.state && 'hace: '}{getTimeAgo(createdAt)}</span>
-                  {
-                    comments.state && <span className="time-ago">(edit: {formatDateTime(comments.updatedAt)})</span>
-                  }
+                  <span className="time-ago">{getTimeAgo(createdAt)}</span>
+                  {comments.state && <span className="time-ago">(edit: {formatDateTime(comments.updatedAt)})</span>}
                 </div>
 
                 {isEditing ? (
                   <div className="edit-area">
-                    <input
-                      value={editText}
-                      onChange={e => setEditText(e.target.value)}
-                    />
-                    <button onClick={() => handleUpdateComment(id)}>
+                    <input value={editText} onChange={e => setEditText(e.target.value)} />
+                    <button onClick={() => handleUpdateComment(id.toString())}>
                       <IonIcon icon={send} />
                     </button>
                     <button className='delete-comment' onClick={() => setEditingId(null)}>✕</button>
@@ -116,6 +130,15 @@ const BoxComments: React.FC<BoxCommentsProps> = ({
                   <p className="comment">{comments.comment}</p>
                 )}
 
+                <div className="like-dislike">
+                  <button onClick={() => handleLikeDislike(id, 'like')} className={userVote?.type === 'like' ? 'voted' : ''}>
+                    <IonIcon icon={thumbsUp} /> {countLikes}
+                  </button>
+                  <button onClick={() => handleLikeDislike(id, 'dislike')} className={userVote?.type === 'dislike' ? 'voted' : ''}>
+                    <IonIcon icon={thumbsDown} /> {countDislikes}
+                  </button>
+                </div>
+
                 {id_user === users.id && !isEditing && (
                   <div className="cont-three-points">
                     <button onClick={() => toggleOptions(id.toString())}>
@@ -123,15 +146,8 @@ const BoxComments: React.FC<BoxCommentsProps> = ({
                     </button>
                     {isOpen && (
                       <div className="box-options">
-                        <button onClick={() => startEditing(id.toString(), comments.comment)}>
-                        editar
-                        </button>
-                        <button
-                          className="delete-comment"
-                          onClick={() => handleDeleteComment(id)}
-                        >
-                          eliminar
-                        </button>
+                        <button onClick={() => startEditing(id.toString(), comments.comment)}>editar</button>
+                        <button className="delete-comment" onClick={() => handleDeleteComment(id)}>eliminar</button>
                       </div>
                     )}
                   </div>
